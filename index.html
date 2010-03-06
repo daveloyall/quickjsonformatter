@@ -1,15 +1,16 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
-<head>
-  <title>Collapsible JSON Formatter - view your json code in colors</title>
-<meta name="description" content="Collapsible JSON Formatter - view your json code in colors">
-<meta name="keywords" content="Json, Printer, Colorer, Format, Color, Collapsible">
-<script>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"> 
+<html xmlns="http://www.w3.org/1999/xhtml"> 
+<head> 
+  <title>Collapsible JSON Formatter - view your json code in colors</title> 
+<meta name="description" content="Collapsible JSON Formatter - view your json code in colors"> 
+<meta name="keywords" content="Json, Printer, Colorer, Format, Color, Collapsible"> 
+<script> 
 // we need tabs as spaces and not CSS magin-left 
 // in order to ratain format when coping and pasing the code
 window.SINGLE_TAB = "  ";
 window.ImgCollapsed = "images/Collapsed.gif";
 window.ImgExpanded = "images/Expanded.gif";
+window.QuoteKeys = true;
 function $id(id){ return document.getElementById(id); }
 function IsArray(obj) {
   return obj && 
@@ -61,7 +62,8 @@ function ProcessObject(obj, indent, addComma, isArray, isPropertyContent){
       html += GetRow(indent, "<span class='ObjectBrace'>{</span>"+clpsHtml, isPropertyContent);
       var j = 0;
       for(var prop in obj){
-        html += GetRow(indent + 1, "<span class='PropertyName'>"+prop+"</span>: "+ProcessObject(obj[prop], indent + 1, ++j < numProps, false, true));
+        var quote = window.QuoteKeys ? "\"" : "";
+        html += GetRow(indent + 1, "<span class='PropertyName'>"+quote+prop+quote+"</span>: "+ProcessObject(obj[prop], indent + 1, ++j < numProps, false, true));
       }
       clpsHtml = window.IsCollapsible ? "</span>" : "";
       html += GetRow(indent, clpsHtml+"<span class='ObjectBrace'>}</span>"+comma);
@@ -76,7 +78,7 @@ function ProcessObject(obj, indent, addComma, isArray, isPropertyContent){
   }else if(type == 'undefined'){
     html += FormatLiteral("undefined", "", comma, indent, isArray, "Null");
   }else{
-    html += FormatLiteral(obj, "\"", comma, indent, isArray, "String");
+    html += FormatLiteral(obj.toString().split("\\").join("\\\\").split('"').join('\\"'), "\"", comma, indent, isArray, "String");
   }
   return html;
 }
@@ -108,7 +110,12 @@ function CollapsibleViewClicked(){
   $id("CollapsibleViewDetail").style.visibility = $id("CollapsibleView").checked ? "visible" : "hidden";
   Process();
 }
-
+ 
+function QuoteKeysClicked(){
+  window.QuoteKeys = $id("QuoteKeys").checked;
+  Process();
+}
+ 
 function CollapseAllClicked(){
   EnsureIsPopulated();
   TraverseChildren($id("Canvas"), function(element){
@@ -179,8 +186,34 @@ function MultiplyString(num, str){
   }
   return sb.join("");
 }
-</script>
-<style>
+function SelectAllClicked(){
+ 
+  if(!!document.selection && !!document.selection.empty) {
+    document.selection.empty();
+  } else if(window.getSelection) {
+    var sel = window.getSelection();
+    if(sel.removeAllRanges) {
+      window.getSelection().removeAllRanges();
+    }
+  }
+ 
+  var range = 
+      (!!document.body && !!document.body.createTextRange)
+          ? document.body.createTextRange()
+          : document.createRange();
+  
+  if(!!range.selectNode)
+    range.selectNode($id("Canvas"));
+  else if(range.moveToElementText)
+    range.moveToElementText($id("Canvas"));
+  
+  if(!!range.select)
+    range.select($id("Canvas"));
+  else
+    window.getSelection().addRange(range);
+}
+</script> 
+<style> 
 *{
 	font-family: Georgia;
 }
@@ -264,53 +297,71 @@ PRE.CodeContainer img{
   width:99%;
   height:130px;
 }
-</style>
-</head>
-<body>
-<div id="HeaderTitle"> Quick Json Formatter 1.0 Copyright (c) 2008-2009 Vladimir Bodurov &nbsp; <a href="http://blog.bodurov.com/Formatter-and-colorer-of-raw-JSON-code">about this tool</a></div>
-<h3 id="HeaderSubTitle">Collapsible JSON Formatter</h3>
-<div>Enter your JSON here:</div>
-
-<textarea id="RawJson">
-</textarea>
-<div id="ControlsRow">
-  <input type="Button" value="Format" onClick="Process()"/>
-  <span id="TabSizeHolder">
+A.OtherToolsLink { color:#555;text-decoration:none; }
+A.OtherToolsLink:hover { text-decoration:underline; }
+</style> 
+</head> 
+<body> 
+<div id="HeaderTitle"> Quick Json Formatter <span style='color:#aaa;font-weight:bold;font-style:italic'>Online</span> 1.0 Copyright (c) 2008-2009 Vladimir Bodurov &nbsp; <a href="http://blog.bodurov.com/Formatter-and-colorer-of-raw-JSON-code">about this tool</a></div> 
+<h3 id="HeaderSubTitle">Collapsible JSON Formatter</h3> 
+<div>Enter your JSON here: <span style='color:#777;font-size:10px'>(Your code will NOT be posted to a server, the program executes on the client)</span></div> 
+ 
+<textarea id="RawJson"> 
+</textarea> 
+<div id="ControlsRow"> 
+  <input type="Button" value="Format" onClick="Process()"/> 
+  <span id="TabSizeHolder"> 
     tab size: 
-    <select id="TabSize" onChange="TabSizeChanged()">
-      <option>1</option>
-      <option>2</option>
-      <option selected="true">3</option>
-      <option>4</option>
-      <option>5</option>
-      <option>6</option>
-    </select>
-  </span>
-  <span id="CollapsibleViewHolder" >
-      <label for="CollapsibleView">
+    <select id="TabSize" onChange="TabSizeChanged()"> 
+      <option value="1">1</option> 
+      <option value="2">2</option> 
+      <option value="3" selected="true">3</option> 
+      <option value="4">4</option> 
+      <option value="5">5</option> 
+      <option value="6">6</option> 
+    </select> 
+  </span> 
+  <label for="QuoteKeys"> 
+    <input type="checkbox" id="QuoteKeys" onClick="QuoteKeysClicked()" checked="true" /> 
+    Keys in Quotes
+  </label>&nbsp; 
+  <a href="javascript:void(0);" onClick="SelectAllClicked()">select all</a> 
+  &nbsp;
+  <span id="CollapsibleViewHolder" > 
+      <label for="CollapsibleView"> 
         <input type="checkbox" id="CollapsibleView" onClick="CollapsibleViewClicked()" checked="true" /> 
         Collapsible View
-      </label>
-  </span>
-  <span id="CollapsibleViewDetail">
-    <a href="javascript:void(0);" onClick="ExpandAllClicked()">expand all</a>
-    <a href="javascript:void(0);" onClick="CollapseAllClicked()">collapse all</a>
-    <a href="javascript:void(0);" onClick="CollapseLevel(3)">level 2+</a>
-    <a href="javascript:void(0);" onClick="CollapseLevel(4)">level 3+</a>
-    <a href="javascript:void(0);" onClick="CollapseLevel(5)">level 4+</a>
-    <a href="javascript:void(0);" onClick="CollapseLevel(6)">level 5+</a>
-    <a href="javascript:void(0);" onClick="CollapseLevel(7)">level 6+</a>
-    <a href="javascript:void(0);" onClick="CollapseLevel(8)">level 7+</a>
-    <a href="javascript:void(0);" onClick="CollapseLevel(9)">level 8+</a>
-  </span>
-</div>
-<div id="Canvas" class="Canvas"></div>
+      </label> 
+  </span> 
+  <span id="CollapsibleViewDetail"> 
+    <a href="javascript:void(0);" onClick="ExpandAllClicked()">expand all</a> 
+    <a href="javascript:void(0);" onClick="CollapseAllClicked()">collapse all</a> 
+    <a href="javascript:void(0);" onClick="CollapseLevel(3)">level 2+</a> 
+    <a href="javascript:void(0);" onClick="CollapseLevel(4)">level 3+</a> 
+    <a href="javascript:void(0);" onClick="CollapseLevel(5)">level 4+</a> 
+    <a href="javascript:void(0);" onClick="CollapseLevel(6)">level 5+</a> 
+    <a href="javascript:void(0);" onClick="CollapseLevel(7)">level 6+</a> 
+    <a href="javascript:void(0);" onClick="CollapseLevel(8)">level 7+</a> 
+    <a href="javascript:void(0);" onClick="CollapseLevel(9)">level 8+</a> 
+  </span> 
+</div> 
+<div id="Canvas" class="Canvas"></div> 
+ 
+ 
+<div style="font-size:10px;color:grey;text-align:right;margin-top:20px"> 
+  my other tools: &nbsp;
+  <a href="http://www.bodurov.com/NearestStars/" class="OtherToolsLink"> 
+    Nearest Stars</a> &nbsp; &nbsp;
+  <a href="http://www.bodurov.com/VectorVisualizer/" class="OtherToolsLink"> 
+    Vector Visualizer</a> &nbsp; &nbsp;
+  <!--a href="http://www.bodurov.com/BitmapVectorizer/" class="OtherToolsLink">
+    Bitmap Vectorizer</a--> 
+</div> 
+ 
+ 
 
-
-
-
-
-
-
-</body>
+ 
+ 
+ 
+</body> 
 </html>
