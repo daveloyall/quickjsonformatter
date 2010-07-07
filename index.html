@@ -33,6 +33,8 @@ function Process(){
     $id("Canvas").innerHTML = "";
   }
 }
+window._dateObj = new Date();
+window._regexpObj = new RegExp();
 function ProcessObject(obj, indent, addComma, isArray, isPropertyContent){
   var html = "";
   var comma = (addComma) ? "<span class='Comma'>,</span> " : ""; 
@@ -50,31 +52,41 @@ function ProcessObject(obj, indent, addComma, isArray, isPropertyContent){
       clpsHtml = window.IsCollapsible ? "</span>" : "";
       html += GetRow(indent, clpsHtml+"<span class='ArrayBrace'>]</span>"+comma);
     }
-  }else if(type == 'object' && obj == null){
-    html += FormatLiteral("null", "", comma, indent, isArray, "Null");
   }else if(type == 'object'){
-    var numProps = 0;
-    for(var prop in obj) numProps++;
-    if(numProps == 0){
-      html += GetRow(indent, "<span class='ObjectBrace'>{ }</span>"+comma, isPropertyContent);
+    if (obj == null){
+        html += FormatLiteral("null", "", comma, indent, isArray, "Null");
+    }else if (obj.constructor == window._dateObj.constructor) { 
+        html += FormatLiteral("new Date(" + obj.getTime() + ") /*" + obj.toLocaleString()+"*/", "", comma, indent, isArray, "Date"); 
+    }else if (obj.constructor == window._regexpObj.constructor) {
+        html += FormatLiteral("new RegExp(" + obj + ")", "", comma, indent, isArray, "RegExp"); 
     }else{
-      clpsHtml = window.IsCollapsible ? "<span><img src=\""+window.ImgExpanded+"\" onClick=\"ExpImgClicked(this)\" /></span><span class='collapsible'>" : "";
-      html += GetRow(indent, "<span class='ObjectBrace'>{</span>"+clpsHtml, isPropertyContent);
-      var j = 0;
-      for(var prop in obj){
-        var quote = window.QuoteKeys ? "\"" : "";
-        html += GetRow(indent + 1, "<span class='PropertyName'>"+quote+prop+quote+"</span>: "+ProcessObject(obj[prop], indent + 1, ++j < numProps, false, true));
+      var numProps = 0;
+      for(var prop in obj) numProps++;
+      if(numProps == 0){
+        html += GetRow(indent, "<span class='ObjectBrace'>{ }</span>"+comma, isPropertyContent);
+      }else{
+        clpsHtml = window.IsCollapsible ? "<span><img src=\""+window.ImgExpanded+"\" onClick=\"ExpImgClicked(this)\" /></span><span class='collapsible'>" : "";
+        html += GetRow(indent, "<span class='ObjectBrace'>{</span>"+clpsHtml, isPropertyContent);
+        var j = 0;
+        for(var prop in obj){
+          var quote = window.QuoteKeys ? "\"" : "";
+          html += GetRow(indent + 1, "<span class='PropertyName'>"+quote+prop+quote+"</span>: "+ProcessObject(obj[prop], indent + 1, ++j < numProps, false, true));
+        }
+        clpsHtml = window.IsCollapsible ? "</span>" : "";
+        html += GetRow(indent, clpsHtml+"<span class='ObjectBrace'>}</span>"+comma);
       }
-      clpsHtml = window.IsCollapsible ? "</span>" : "";
-      html += GetRow(indent, clpsHtml+"<span class='ObjectBrace'>}</span>"+comma);
     }
   }else if(type == 'number'){
     html += FormatLiteral(obj, "", comma, indent, isArray, "Number");
   }else if(type == 'boolean'){
     html += FormatLiteral(obj, "", comma, indent, isArray, "Boolean");
   }else if(type == 'function'){
-    obj = FormatFunction(indent, obj);
-    html += FormatLiteral(obj, "", comma, indent, isArray, "Function");
+    if (obj.constructor == window._regexpObj.constructor) {
+        html += FormatLiteral("new RegExp(" + obj + ")", "", comma, indent, isArray, "RegExp"); 
+    }else{
+        obj = FormatFunction(indent, obj);
+        html += FormatLiteral(obj, "", comma, indent, isArray, "Function");
+    }
   }else if(type == 'undefined'){
     html += FormatLiteral("undefined", "", comma, indent, isArray, "Null");
   }else{
@@ -212,6 +224,12 @@ function SelectAllClicked(){
   else
     window.getSelection().addRange(range);
 }
+function LinkToJson(){
+  var val = $id("RawJson").value;
+  val = escape(val.split('/n').join(' ').split('/r').join(' '));
+  $id("InvisibleLinkUrl").value = val;
+  $id("InvisibleLink").submit();
+}
 </script> 
 <style> 
 *{
@@ -347,8 +365,12 @@ A.OtherToolsLink:hover { text-decoration:underline; }
 </div> 
 <div id="Canvas" class="Canvas"></div> 
  
+<form id="InvisibleLink" action="http://www.bodurov.com/JsonFormatter/view.aspx" target="_blank"> 
+  <input type="hidden" id="InvisibleLinkUrl" name="json" value="" /> 
+</form> 
  
 <div style="font-size:10px;color:grey;text-align:right;margin-top:20px"> 
+  <input type="button" value="link to this json" onClick="LinkToJson()" style="color:#777" /> &nbsp; &nbsp;
   my other tools: &nbsp;
   <a href="http://www.bodurov.com/NearestStars/" class="OtherToolsLink"> 
     Nearest Stars</a> &nbsp; &nbsp;
@@ -359,9 +381,9 @@ A.OtherToolsLink:hover { text-decoration:underline; }
 </div> 
  
  
-
+ 
  
  
  
 </body> 
-</html>
+</html> 
