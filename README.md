@@ -19,4 +19,4 @@ Features
 
 Roadmap
 -------
-Have a look at [the issues list](issues).
+Have a look at [the issues list](../../issues).
