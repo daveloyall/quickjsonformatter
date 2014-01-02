@@ -16,3 +16,7 @@ Features
 * permlink feature (all state saved in GET url)
 * interactive configuration
 * easily adapted for use inside other projects
+
+Roadmap
+-------
+Have a look at [the issues list](issues).
